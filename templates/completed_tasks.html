@@ -1,0 +1,54 @@
+<!-- Navbar -->
+<nav class="navbar">
+  <h1 class="navbar-item">Task Manager</h1>
+  <a href="/tasks" class="navbar-item">Incomplete Tasks</a>
+  <a href="/completed_tasks" class="navbar-item">Completed Tasks</a>
+  <a href="/all_tasks" class="navbar-item">All Tasks</a>
+  <form action="" method="get" class="navbar-item search-bar">
+    <input type="text" name="search" placeholder="Enter task to search" />
+    <input type="submit" value="Search" />
+  </form>
+</nav>
+<div class="container">
+  <!-- Display completed tasks -->
+  <h1>Completed Tasks</h1>
+  <table class="table">
+    <tr class="table">
+      <th class="table table-item">S. No.</th>
+      <th class="table table-item">Task Name</th>
+    </tr>
+    {% for task in tasks %}
+    <tr>
+      <td class="table table-item">{{ forloop.counter }}.</td>
+      <td class="table table-item">{{ task }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% for page in paginator.page_range %}
+  <li>
+    <a href="?page={{ page }}&search={{request.GET.search}}">{{ page }}</a>
+  </li>
+  {% endfor %}
+</div>
+
+<style>
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .search-bar {
+    display: inline;
+  }
+  .navbar-item {
+    display: inline;
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+  .table {
+    border: 1px solid black;
+  }
+  .table-item {
+    padding: 10px;
+  }
+</style>
