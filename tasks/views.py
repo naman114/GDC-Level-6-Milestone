@@ -65,8 +65,12 @@ class GenericAllTaskView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super(GenericAllTaskView, self).get_context_data(**kwargs)
-        context["active_tasks"] = Task.objects.filter(deleted=False, completed=False)
-        context["completed_tasks"] = Task.objects.filter(completed=True)
+        context["active_tasks"] = Task.objects.filter(
+            deleted=False, completed=False, user=self.request.user
+        )
+        context["completed_tasks"] = Task.objects.filter(
+            completed=True, user=self.request.user
+        )
         search_term = self.request.GET.get("search")
         if search_term:
             context["active_tasks"] = context["active_tasks"].filter(
@@ -76,18 +80,6 @@ class GenericAllTaskView(LoginRequiredMixin, ListView):
                 title__icontains=search_term
             )
         return context
-
-
-def all_tasks_view(request):
-    search_term = request.GET.get("search")
-    return render(
-        request,
-        "all_tasks.html",
-        {
-            "active_tasks": get_tasks("pending", search_term),
-            "completed_tasks": get_tasks("completed", search_term),
-        },
-    )
 
 
 ################################ Task Detail View ##########################################
@@ -151,20 +143,6 @@ class GenericMarkTaskAsCompleteView(AuthorizedTaskManager, UpdateView):
         self.object.completed = True
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
-
-
-################################ Helper function to return pending tasks and completed tasks ##########################################
-def get_tasks(task_type, search_term):
-    tasks = None
-    if task_type == "pending":
-        tasks = Task.objects.filter(deleted=False, completed=False)
-    elif task_type == "completed":
-        tasks = Task.objects.filter(completed=True)
-
-    if search_term:
-        tasks = tasks.filter(title__icontains=search_term)
-
-    return tasks
 
 
 ################################ Session Storage ##########################################

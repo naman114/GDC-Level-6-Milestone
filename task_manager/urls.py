@@ -16,7 +16,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from tasks.views import (
-    all_tasks_view,
     GenericTaskView,
     GenericTaskCreateView,
     GenericTaskUpdateView,
