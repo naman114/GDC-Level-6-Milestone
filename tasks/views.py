@@ -21,36 +21,6 @@ class AuthorizedTaskManager(LoginRequiredMixin):
         return tasks
 
 
-class TaskPriorityCascadingManager:
-    def form_valid(self, form):
-        self.object = form.save()
-        self.object.user = self.request.user
-
-        tasks_matching_priority = Task.objects.filter(
-            priority=self.object.priority,
-            user=self.request.user,
-            deleted=False,
-            completed=False,
-        )
-        if tasks_matching_priority.exists():
-            pending_tasks = Task.objects.filter(
-                user=self.request.user, completed=False, deleted=False
-            )
-            priority_pk_dict = {}
-            for task in pending_tasks:
-                priority_pk_dict[task.priority] = task.pk
-
-            for key in sorted(priority_pk_dict.keys(), reverse=True):
-                taskToUpdate = Task.objects.get(pk=priority_pk_dict[key])
-                taskToUpdate.priority += 1
-                taskToUpdate.save()
-                if key == self.object.priority:
-                    break
-
-        self.object.save()
-        return HttpResponseRedirect(self.get_success_url())
-
-
 ################################ Pending tasks ##########################################
 class GenericTaskView(LoginRequiredMixin, ListView):
     queryset = Task.objects.filter(deleted=False, completed=False)
@@ -134,22 +104,98 @@ class TaskCreateForm(ModelForm):
         fields = ("title", "description", "priority", "completed")
 
 
-class GenericTaskCreateView(
-    LoginRequiredMixin, TaskPriorityCascadingManager, CreateView
-):
+class GenericTaskCreateView(LoginRequiredMixin, CreateView):
     form_class = TaskCreateForm
     template_name = "task_create.html"
     success_url = "/tasks"
 
+    def form_valid(self, form):
+        self.object = form.save()
+        self.object.user = self.request.user
+
+        tasks_matching_priority = Task.objects.filter(
+            priority=self.object.priority,
+            user=self.request.user,
+            deleted=False,
+            completed=False,
+        )
+        if tasks_matching_priority.exists():
+            pending_tasks = Task.objects.filter(
+                user=self.request.user, completed=False, deleted=False
+            )
+            priority_pk_dict = {}
+            for task in pending_tasks:
+                priority_pk_dict[task.priority] = task.pk
+
+            for key in sorted(priority_pk_dict.keys(), reverse=True):
+                taskToUpdate = Task.objects.get(pk=priority_pk_dict[key])
+                taskToUpdate.priority += 1
+                taskToUpdate.save()
+                if key == self.object.priority:
+                    break
+
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+
 
 ################################ Update a task ##########################################
-class GenericTaskUpdateView(
-    AuthorizedTaskManager, TaskPriorityCascadingManager, UpdateView
-):
+class GenericTaskUpdateView(AuthorizedTaskManager, UpdateView):
     model = Task
     form_class = TaskCreateForm
     template_name = "task_update.html"
     success_url = "/tasks"
+
+    def form_valid(self, form):
+        existing_priority = Task.objects.get(pk=self.object.pk).priority
+        pending_tasks = Task.objects.filter(
+            user=self.request.user, completed=False, deleted=False
+        )
+
+        tasks_matching_priority = Task.objects.filter(
+            priority=self.object.priority,
+            user=self.request.user,
+            deleted=False,
+            completed=False,
+        )
+
+        if tasks_matching_priority.exists():
+            priority_pk_list = []
+            for task in pending_tasks:
+                priority_pk_list.append([task.priority, task.pk])
+
+            target_priority = tasks_matching_priority.first().priority
+
+            if existing_priority > target_priority:
+                priority_pk_list.sort(reverse=True)
+                flag = False
+                for item in priority_pk_list:
+                    if flag == False:
+                        if item[0] == existing_priority:
+                            flag = True
+                    else:
+                        taskToUpdate = Task.objects.get(pk=item[1])
+                        taskToUpdate.priority += 1
+                        taskToUpdate.save()
+                        if item[0] == target_priority:
+                            break
+
+            else:
+                priority_pk_list.sort()
+                flag = False
+                for item in priority_pk_list:
+                    if flag == False:
+                        if item[0] == existing_priority:
+                            flag = True
+                    else:
+                        taskToUpdate = Task.objects.get(pk=item[1])
+                        taskToUpdate.priority -= 1
+                        taskToUpdate.save()
+                        if item[0] == target_priority:
+                            break
+
+        self.object = form.save()
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
 
 
 ################################ Delete a task ##########################################
