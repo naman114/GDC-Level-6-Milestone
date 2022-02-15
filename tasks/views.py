@@ -32,7 +32,7 @@ class GenericTaskView(LoginRequiredMixin, ListView):
         search_term = self.request.GET.get("search")
         tasks = Task.objects.filter(
             deleted=False, completed=False, user=self.request.user
-        )
+        ).order_by("priority")
 
         if search_term:
             tasks = tasks.filter(title__icontains=search_term)
@@ -49,7 +49,9 @@ class GenericCompletedTaskView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         search_term = self.request.GET.get("search")
-        tasks = Task.objects.filter(completed=True, user=self.request.user)
+        tasks = Task.objects.filter(completed=True, user=self.request.user).order_by(
+            "priority"
+        )
 
         if search_term:
             tasks = tasks.filter(title__icontains=search_term)
@@ -67,10 +69,10 @@ class GenericAllTaskView(LoginRequiredMixin, ListView):
         context = super(GenericAllTaskView, self).get_context_data(**kwargs)
         context["active_tasks"] = Task.objects.filter(
             deleted=False, completed=False, user=self.request.user
-        )
+        ).order_by("priority")
         context["completed_tasks"] = Task.objects.filter(
             completed=True, user=self.request.user
-        )
+        ).order_by("priority")
         search_term = self.request.GET.get("search")
         if search_term:
             context["active_tasks"] = context["active_tasks"].filter(
@@ -99,7 +101,7 @@ class TaskCreateForm(ModelForm):
 
     class Meta:
         model = Task
-        fields = ("title", "description", "completed")
+        fields = ("title", "description", "priority", "completed")
 
 
 class GenericTaskCreateView(LoginRequiredMixin, CreateView):

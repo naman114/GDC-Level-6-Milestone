@@ -18,15 +18,19 @@
         <tr class="table">
           <th class="table table-item">S. No.</th>
           <th class="table table-item">Task Name</th>
+          <th class="table table-item">Priority</th>
           <th class="table table-item">Action</th>
         </tr>
         {% for task in active_tasks %}
         <tr>
           <td class="table table-item">{{ forloop.counter }}.</td>
           <td class="table table-item">{{ task }}</td>
+          <td class="table table-item">{{task.priority}}</td>
           <td class="table table-item">
-            <a href="/delete-task/{{forloop.counter}}">Delete task</a> <br />
-            <a href="/complete_task/{{forloop.counter}}">Mark as complete</a>
+            <a href="/delete-task/{{ task.id }}">Delete task</a> <br />
+            <a href="/complete_task/{{ task.id }}">Mark as complete</a> <br />
+            <a href="/update-task/{{ task.id }}">Update Task</a> <br />
+            <a href="/detail-task/{{ task.id }}">Details of Task</a> <br />
           </td>
         </tr>
         {% endfor %}
@@ -40,11 +44,13 @@
         <tr class="table">
           <th class="table table-item">S. No.</th>
           <th class="table table-item">Task Name</th>
+          <th class="table table-item">Priority</th>
         </tr>
         {% for task in completed_tasks %}
         <tr>
           <td class="table table-item">{{ forloop.counter }}.</td>
           <td class="table table-item">{{ task }}</td>
+          <td class="table table-item">{{ task.priority }}</td>
         </tr>
         {% endfor %}
       </table>

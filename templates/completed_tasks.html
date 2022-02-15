@@ -16,11 +16,13 @@
     <tr class="table">
       <th class="table table-item">S. No.</th>
       <th class="table table-item">Task Name</th>
+      <th class="table table-item">Priority</th>
     </tr>
     {% for task in tasks %}
     <tr>
       <td class="table table-item">{{ forloop.counter }}.</td>
       <td class="table table-item">{{ task }}</td>
+      <td class="table table-item">{{ task.priority }}</td>
     </tr>
     {% endfor %}
   </table>
