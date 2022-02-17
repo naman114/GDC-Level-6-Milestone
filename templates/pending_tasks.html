@@ -1,80 +1,184 @@
-<!-- Navbar -->
-<nav class="navbar">
-  <h1 class="navbar-item">Task Manager</h1>
-  <a href="/tasks" class="navbar-item">Incomplete Tasks</a>
-  <a href="/completed_tasks" class="navbar-item">Completed Tasks</a>
-  <a href="/all_tasks" class="navbar-item">All Tasks</a>
-  <form action="" method="get" class="navbar-item search-bar">
-    <input type="text" name="search" placeholder="Enter task to search" />
-    <input type="submit" value="Search" />
-  </form>
-</nav>
-<div class="container">
-  <!-- Add new task -->
-  <!-- <h1>Add New Task</h1>
-  <form action="/add-task" method="get" class="form">
-    <label for="task" class="label-text"> Task: </label>
-    <input type="text" name="task" /><br />
-    <input type="submit" value="Submit" />
-  </form> -->
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Manager | Pending Tasks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/2/2.1.2/iconify.min.js"></script>
+  </head>
+  <body class="h-full">
+    <div
+      class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+    >
+      <div class="max-w-md w-full space-y-6">
+        <div class="flex justify-between">
+          <h2 class="mt-6 text-4xl font-bold text-gray-900">
+            Hi {{ request.user }}
+          </h2>
+          <h2 class="mt-6 mr-2 text-xl text-red-500 hover:cursor-pointer">
+            <a href="/user/logout">Log out</a>
+          </h2>
+        </div>
 
-  <!-- Display pending tasks -->
-  <h1>Incomplete Tasks</h1>
-  <table class="table">
-    <tr class="table">
-      <th class="table table-item">S. No.</th>
-      <th class="table table-item">Task Name</th>
-      <th class="table table-item">Priority</th>
-      <th class="table table-item">Action</th>
-    </tr>
-    {% for task in tasks %}
-    <tr>
-      <td class="table table-item">{{ forloop.counter }}.</td>
-      <td class="table table-item">{{task.title}} - {{ task.created_date }}</td>
-      <td class="table table-item">{{task.priority}}</td>
-      <td class="table table-item">
-        <a href="/delete-task/{{ task.id }}">Delete task</a> <br />
-        <a href="/complete_task/{{ task.id }}">Mark as complete</a> <br />
-        <a href="/update-task/{{ task.id }}">Update Task</a> <br />
-        <a href="/detail-task/{{ task.id }}">Details of Task</a> <br />
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
+        <!-- TODO: Fix completed_tasks and total_tasks count -->
+        <h3>{{ completed_tasks }} of {{ total_tasks }} tasks completed</h3>
+        <div class="flex justify-evenly">
+          <h2 class="text-lg hover:cursor-pointer px-5 py-1">
+            <a href="/all_tasks">All</a>
+          </h2>
+          <h2
+            class="text-lg hover:cursor-pointer px-5 py-1 text-red-500 bg-red-100 rounded-3xl"
+          >
+            <a href="/tasks">Pending</a>
+          </h2>
+          <h2 class="text-lg hover:cursor-pointer px-5 py-1">
+            <a href="/completed_tasks">Completed</a>
+          </h2>
+        </div>
 
-  {% for page in paginator.page_range %}
-  <li>
-    <a href="?page={{ page }}&search={{request.GET.search}}">{{ page }}</a>
-  </li>
-  {% endfor %}
-</div>
+        <form action="" method="get" class="flex justify-center">
+          <input
+            class="bg-slate-100 w-64 p-3 mr-4 rounded-2xl focus:outline-none"
+            type="text"
+            name="search"
+            placeholder="Enter task to search"
+          />
+          <input type="submit" value="Search" />
+        </form>
 
-<style>
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .navbar-item {
-    display: inline;
-    margin-right: 20px;
-    margin-left: 20px;
-  }
-  .search-bar {
-    display: inline;
-  }
-  .table {
-    border: 1px solid black;
-  }
-  .table-item {
-    padding: 10px;
-  }
-  .form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .label-text {
-    margin-bottom: 7px;
-  }
-</style>
+        <div class="flex flex-col">
+          {% for task in tasks %}
+          <div
+            class="flex justify-between bg-slate-100 p-5 rounded-2xl mb-2 hover:cursor-pointer hover:bg-slate-200"
+          >
+            <a href="/detail-task/{{ task.id }}">
+              <div>
+                <h3>{{ task.title }}</h3>
+                <h3 class="text-slate-500">
+                  {{ task.created_date|date:"D d M" }}
+                </h3>
+              </div>
+            </a>
+            <div class="flex items-center">
+              <!-- Mark as complete icon -->
+              <a href="/complete_task/{{ task.id }}">
+                <div
+                  class="bg-lime-500 w-10 h-10 mx-2 flex justify-center items-center rounded-md"
+                >
+                  <span
+                    class="iconify text-white w-5 h-5"
+                    data-icon="subway:tick"
+                  ></span>
+                </div>
+              </a>
+              <!-- Update task icon -->
+              <a href="/update-task/{{ task.id }}">
+                <div
+                  class="bg-teal-400 w-10 h-10 mx-2 flex justify-center items-center rounded-md"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M14.1667 2.5C14.3856 2.28113 14.6455 2.10752 14.9314 1.98906C15.2174 1.87061 15.5239 1.80965 15.8334 1.80965C16.1429 1.80965 16.4494 1.87061 16.7354 1.98906C17.0214 2.10752 17.2812 2.28113 17.5001 2.5C17.719 2.71887 17.8926 2.97871 18.011 3.26468C18.1295 3.55064 18.1904 3.85714 18.1904 4.16667C18.1904 4.4762 18.1295 4.7827 18.011 5.06866C17.8926 5.35463 17.719 5.61447 17.5001 5.83334L6.25008 17.0833L1.66675 18.3333L2.91675 13.75L14.1667 2.5Z"
+                      stroke="white"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </a>
+              <!-- Delete task icon -->
+              <a href="/delete-task/{{ task.id }}">
+                <div
+                  class="bg-rose-500 w-10 h-10 mx-2 flex justify-center items-center rounded-md"
+                >
+                  <svg
+                    width="14"
+                    height="20"
+                    viewBox="0 0 14 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M3.66675 5V3.33333C3.66675 2.8913 3.84234 2.46738 4.1549 2.15482C4.46746 1.84226 4.89139 1.66666 5.33342 1.66666H8.66675C9.10878 1.66666 9.5327 1.84226 9.84526 2.15482C10.1578 2.46738 10.3334 2.8913 10.3334 3.33333V5M12.8334 5V16.6667C12.8334 17.1087 12.6578 17.5326 12.3453 17.8452C12.0327 18.1577 11.6088 18.3333 11.1667 18.3333H2.83341C2.39139 18.3333 1.96746 18.1577 1.6549 17.8452C1.34234 17.5326 1.16675 17.1087 1.16675 16.6667V5H12.8334Z"
+                      stroke="white"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+
+        <div class="flex justify-center">
+          {% if page_obj.has_previous %}
+          <div class="flex items-center mr-2">
+            <a
+              href="?page={{ page_obj.previous_page_number }}&search={{request.GET.search}}"
+            >
+              <span
+                class="iconify text-red-500 h-5 w-5"
+                data-icon="bxs:left-arrow"
+              ></span>
+            </a>
+          </div>
+          {% else %}
+          <div class="flex items-center mr-2">
+            <span
+              class="iconify text-slate-500 h-5 w-5"
+              data-icon="bxs:left-arrow"
+            ></span>
+          </div>
+          {% endif %}
+          <div
+            class="border-2 border-red-500 rounded-md px-2 py-1 flex justify-center w-min"
+          >
+            {{ page_obj.number }}
+          </div>
+          {% if page_obj.has_next %}
+          <div class="flex items-center ml-2">
+            <a
+              href="?page={{ page_obj.next_page_number }}&search={{request.GET.search}}"
+            >
+              <span
+                class="iconify text-red-500 h-5 w-5"
+                data-icon="bxs:right-arrow"
+              ></span>
+            </a>
+          </div>
+          {% else %}
+          <div class="flex items-center ml-2">
+            <span
+              class="iconify text-slate-500 h-5 w-5"
+              data-icon="bxs:right-arrow"
+            ></span>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <a href="/create-task">
+          <div
+            class="mt-8 group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            Add
+          </div>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
