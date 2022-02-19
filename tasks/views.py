@@ -1,4 +1,4 @@
-from re import template
+from itertools import chain
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from tasks.models import Task
@@ -64,30 +64,35 @@ class GenericAllTaskView(LoginRequiredMixin, ListView):
     queryset = Task.objects.filter(deleted=False)
     template_name = "all_tasks.html"
     context_object_name = "tasks"
+    paginate_by = 5
 
-    def get_context_data(self, **kwargs):
-        context = super(GenericAllTaskView, self).get_context_data(**kwargs)
-        context["active_tasks"] = Task.objects.filter(
+    def get_queryset(self):
+        search_term = self.request.GET.get("search")
+        active_tasks = Task.objects.filter(
             deleted=False, completed=False, user=self.request.user
         ).order_by("priority")
-        context["completed_tasks"] = Task.objects.filter(
+        completed_tasks = Task.objects.filter(
             completed=True, user=self.request.user
         ).order_by("priority")
-        search_term = self.request.GET.get("search")
+
         if search_term:
-            context["active_tasks"] = context["active_tasks"].filter(
-                title__icontains=search_term
-            )
-            context["completed_tasks"] = context["completed_tasks"].filter(
-                title__icontains=search_term
-            )
-        return context
+            active_tasks = active_tasks.filter(title__icontains=search_term)
+            completed_tasks = completed_tasks.filter(title__icontains=search_term)
+
+        tasks = list(chain(active_tasks, completed_tasks))
+
+        return tasks
 
 
 ################################ Task Detail View ##########################################
-class GenericTaskDetailView(AuthorizedTaskManager, DetailView):
+class GenericTaskDetailView(DetailView):
     model = Task
     template_name = "task_detail.html"
+
+    # The details of both completed and pending tasks can be viewed
+    def get_queryset(self):
+        tasks = Task.objects.filter(deleted=False, user=self.request.user)
+        return tasks
 
 
 ################################ Add a task ##########################################
@@ -190,7 +195,7 @@ class GenericTaskUpdateView(AuthorizedTaskManager, UpdateView):
                         taskToUpdate.save()
                         if key == target_priority:
                             break
-            
+
             # Case 2: When we want to increase the priority of a task (move it down the list)
             # The idea is to decrease the priority by 1 of all tasks having priority in the range [existing_priority + 1, target_priority]
             else:

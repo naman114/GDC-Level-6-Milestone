@@ -1,56 +1,131 @@
-<!-- Navbar -->
-<nav class="navbar">
-  <h1 class="navbar-item">Task Manager</h1>
-  <a href="/tasks" class="navbar-item">Incomplete Tasks</a>
-  <a href="/completed_tasks" class="navbar-item">Completed Tasks</a>
-  <a href="/all_tasks" class="navbar-item">All Tasks</a>
-  <form action="" method="get" class="navbar-item search-bar">
-    <input type="text" name="search" placeholder="Enter task to search" />
-    <input type="submit" value="Search" />
-  </form>
-</nav>
-<div class="container">
-  <!-- Display completed tasks -->
-  <h1>Completed Tasks</h1>
-  <table class="table">
-    <tr class="table">
-      <th class="table table-item">S. No.</th>
-      <th class="table table-item">Task Name</th>
-      <th class="table table-item">Priority</th>
-    </tr>
-    {% for task in tasks %}
-    <tr>
-      <td class="table table-item">{{ forloop.counter }}.</td>
-      <td class="table table-item">{{ task }}</td>
-      <td class="table table-item">{{ task.priority }}</td>
-    </tr>
-    {% endfor %}
-  </table>
-  {% for page in paginator.page_range %}
-  <li>
-    <a href="?page={{ page }}&search={{request.GET.search}}">{{ page }}</a>
-  </li>
-  {% endfor %}
-</div>
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Manager | Completed Tasks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/2/2.1.2/iconify.min.js"></script>
+  </head>
+  <body class="h-full">
+    <div
+      class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+    >
+      <div class="max-w-md w-full space-y-6">
+        <div class="flex justify-between">
+          <h2 class="mt-6 text-4xl font-bold text-gray-900">
+            Hi {{ request.user }}
+          </h2>
+          <h2 class="mt-6 mr-2 text-xl text-red-500 hover:cursor-pointer">
+            <a href="/user/logout">Log out</a>
+          </h2>
+        </div>
 
-<style>
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .search-bar {
-    display: inline;
-  }
-  .navbar-item {
-    display: inline;
-    margin-right: 20px;
-    margin-left: 20px;
-  }
-  .table {
-    border: 1px solid black;
-  }
-  .table-item {
-    padding: 10px;
-  }
-</style>
+        <!-- TODO: Fix completed_tasks and total_tasks count -->
+        <h3>{{ completed_tasks }} of {{ total_tasks }} tasks completed</h3>
+        <div class="flex justify-evenly">
+          <h2 class="text-lg hover:cursor-pointer px-5 py-1">
+            <a href="/all_tasks">All</a>
+          </h2>
+          <h2 class="text-lg hover:cursor-pointer px-5 py-1">
+            <a href="/tasks">Pending</a>
+          </h2>
+          <h2
+            class="text-lg hover:cursor-pointer px-5 py-1 text-red-500 bg-red-100 rounded-3xl"
+          >
+            <a href="/completed_tasks">Completed</a>
+          </h2>
+        </div>
+
+        <form action="" method="get" class="flex justify-center">
+          <input
+            class="bg-slate-100 w-64 p-3 mr-4 rounded-2xl focus:outline-none"
+            type="text"
+            name="search"
+            placeholder="Enter task to search"
+          />
+          <input
+            class="border-2 border-red-500 rounded-md px-2 py-1 flex justify-center w-min hover:cursor-pointer"
+            type="submit"
+            value="Search"
+          />
+        </form>
+
+        <div class="flex flex-col">
+          {% for task in tasks %}
+          <div
+            class="flex justify-between bg-slate-100 p-5 rounded-2xl mb-2 hover:cursor-pointer hover:bg-slate-200"
+          >
+            <div>
+              <a href="/detail-task/{{ task.id }}">
+                <h3>{{ task.title }}</h3>
+                <h3 class="text-slate-500">
+                  {{ task.created_date|date:"D d M" }}
+                </h3>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+
+        <div class="flex justify-center">
+          {% if page_obj.has_previous %}
+          <div class="flex items-center mr-2">
+            <a
+              href="?page={{ page_obj.previous_page_number }}&search={{request.GET.search}}"
+            >
+              <span
+                class="iconify text-red-500 h-5 w-5"
+                data-icon="bxs:left-arrow"
+              ></span>
+            </a>
+          </div>
+          {% else %}
+          <div class="flex items-center mr-2">
+            <span
+              class="iconify text-slate-500 h-5 w-5"
+              data-icon="bxs:left-arrow"
+            ></span>
+          </div>
+          {% endif %}
+          <div
+            class="border-2 border-red-500 rounded-md px-2 py-1 flex justify-center w-min"
+          >
+            {{ page_obj.number }}
+          </div>
+          {% if page_obj.has_next %}
+          <div class="flex items-center ml-2">
+            <a
+              href="?page={{ page_obj.next_page_number }}&search={{request.GET.search}}"
+            >
+              <span
+                class="iconify text-red-500 h-5 w-5"
+                data-icon="bxs:right-arrow"
+              ></span>
+            </a>
+          </div>
+          {% else %}
+          <div class="flex items-center ml-2">
+            <span
+              class="iconify text-slate-500 h-5 w-5"
+              data-icon="bxs:right-arrow"
+            ></span>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <a href="/create-task">
+          <div
+            class="mt-8 group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            Add
+          </div>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
