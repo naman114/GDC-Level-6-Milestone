@@ -1,21 +1,36 @@
-<div class="container">
-  <!-- Add new task -->
-  <h1>Sign Up</h1>
-  <form action="" method="post" class="form">
-    {{ form.as_p }} {% csrf_token %}
-    <input type="submit" value="Sign Up" />
-  </form>
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Manager | Signup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="h-full">
+    <div
+      class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+    >
+      <div class="max-w-md w-full space-y-8">
+        <h2 class="mt-6 text-4xl font-bold text-gray-900">Todo Manager</h2>
+        <br />
+        <h3 class="text-xl">Signup</h3>
+        <form class="mt-8" action="" method="POST">
+          {{ form }} {% csrf_token %}
 
-  <style>
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .form {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-  </style>
-</div>
+          <div>
+            <button
+              type="submit"
+              class="mt-8 group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Sign Up
+            </button>
+          </div>
+        </form>
+        <div class="flex justify-end">
+          <a href="/user/login">Already signed up? Login</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

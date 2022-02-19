@@ -1,6 +1,6 @@
 from itertools import chain
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.utils.safestring import mark_safe
 from tasks.models import Task
 
 from django.views.generic.list import ListView
@@ -8,7 +8,7 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.forms import ModelForm
 from django.core.exceptions import ValidationError
 from django.views.generic.detail import DetailView
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -107,6 +107,21 @@ class TaskCreateForm(ModelForm):
     class Meta:
         model = Task
         fields = ("title", "description", "priority", "completed")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["title"].widget.attrs[
+            "class"
+        ] = "mb-7 block w-full px-3 py-2 bg-gray-100 text-gray-900 rounded-lg"
+        self.fields["description"].widget.attrs[
+            "class"
+        ] = "mb-7 block w-full px-3 py-2 bg-gray-100 text-gray-900 rounded-lg"
+        self.fields["description"].widget.attrs["cols"] = "30"
+        self.fields["description"].widget.attrs["rows"] = "5"
+        self.fields["priority"].widget.attrs[
+            "class"
+        ] = "mb-7 block w-full px-3 py-2 bg-gray-100 text-gray-900 rounded-lg"
+        self.fields["completed"].widget.attrs["class"] = "ml-2"
 
 
 class GenericTaskCreateView(LoginRequiredMixin, CreateView):
@@ -253,11 +268,49 @@ def session_storage_view(request):
 
 
 ################################ User Sign Up ##########################################
+
+
+class UserSignupForm(UserCreationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].widget.attrs[
+            "class"
+        ] = "mb-7 block w-full px-3 py-2 bg-gray-100 text-gray-900 rounded-lg"
+        self.fields["username"].help_text = mark_safe(
+            '<p class="text-sm -mt-10 mb-10"> Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</p>'
+        )
+        self.fields["password1"].widget.attrs[
+            "class"
+        ] = "mb-7 block w-full px-3 py-2 bg-gray-100 text-gray-900 rounded-lg"
+        self.fields["password1"].help_text = mark_safe(
+            "<ul class='-mt-10 mb-10'><li class='text-sm'>Your password can't be too similar to your other personal information.</li><li class='text-sm'>Your password must contain at least 8 characters.</li><li class='text-sm'>Your password can't be a commonly used password.</li><li class='text-sm'>Your password can't be entirely numeric.</li></ul>"
+        )
+        self.fields["password2"].widget.attrs[
+            "class"
+        ] = "mb-7 block w-full px-3 py-2 bg-gray-100 text-gray-900 rounded-lg"
+        self.fields["password2"].help_text = mark_safe(
+            "<p class='text-sm -mt-10 mb-10'>Enter the same password as before, for verification.</p>"
+        )
+        self.error_css_class = "text-sm"
+
+
 class UserCreateView(CreateView):
-    form_class = UserCreationForm
+    form_class = UserSignupForm
     template_name = "user_create.html"
     success_url = "/user/login"
 
 
+class UserLoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].widget.attrs[
+            "class"
+        ] = "mb-7 block w-full px-3 py-2 bg-gray-100 text-gray-900 rounded-lg"
+        self.fields["password"].widget.attrs[
+            "class"
+        ] = "mb-7 block w-full px-3 py-2 bg-gray-100 text-gray-900 rounded-lg"
+
+
 class UserLoginView(LoginView):
     template_name = "user_login.html"
+    authentication_form = UserLoginForm
