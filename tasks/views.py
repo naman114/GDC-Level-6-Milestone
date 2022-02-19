@@ -21,8 +21,23 @@ class AuthorizedTaskManager(LoginRequiredMixin):
         return tasks
 
 
+class TaskProgressManager:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["completed_tasks_count"] = Task.objects.filter(
+            completed=True, user=self.request.user
+        ).count()
+        context["total_tasks_count"] = (
+            context["completed_tasks_count"]
+            + Task.objects.filter(
+                deleted=False, completed=False, user=self.request.user
+            ).count()
+        )
+        return context
+
+
 ################################ Pending tasks ##########################################
-class GenericTaskView(LoginRequiredMixin, ListView):
+class GenericTaskView(LoginRequiredMixin, TaskProgressManager, ListView):
     queryset = Task.objects.filter(deleted=False, completed=False)
     template_name = "pending_tasks.html"
     context_object_name = "tasks"
@@ -41,7 +56,7 @@ class GenericTaskView(LoginRequiredMixin, ListView):
 
 
 ################################ Completed tasks ##########################################
-class GenericCompletedTaskView(LoginRequiredMixin, ListView):
+class GenericCompletedTaskView(LoginRequiredMixin, TaskProgressManager, ListView):
     queryset = Task.objects.filter(completed=True)
     template_name = "completed_tasks.html"
     context_object_name = "tasks"
@@ -60,7 +75,7 @@ class GenericCompletedTaskView(LoginRequiredMixin, ListView):
 
 
 ################################ All tasks ##########################################
-class GenericAllTaskView(LoginRequiredMixin, ListView):
+class GenericAllTaskView(LoginRequiredMixin, TaskProgressManager, ListView):
     queryset = Task.objects.filter(deleted=False)
     template_name = "all_tasks.html"
     context_object_name = "tasks"

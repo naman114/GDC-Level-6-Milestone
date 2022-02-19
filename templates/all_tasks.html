@@ -22,10 +22,8 @@
           </h2>
         </div>
 
-        <!-- TODO: Fix completed_tasks and total_tasks count -->
         <h3>
-          {{ completed_tasks.count }} of {{
-          active_tasks.count|add:"completed_tasks.count" }} tasks completed
+          {{ completed_tasks_count }} of {{ total_tasks_count }} tasks completed
         </h3>
         <div class="flex justify-evenly">
           <h2
@@ -54,6 +52,10 @@
             value="Search"
           />
         </form>
+
+        {% if not tasks|length %}
+        <p class="text-center">Task list is empty! {{tasks|length}}</p>
+        {% endif %}
 
         <div class="flex flex-col">
           {% for task in tasks %}
@@ -140,23 +142,6 @@
             </div>
 
             {% endif %}
-          </div>
-          {% endfor %}
-          <!-- Completed Tasks -->
-          {% for task in completed_tasks %}
-          <div
-            class="flex justify-between bg-slate-100 p-5 rounded-2xl mb-2 hover:cursor-pointer hover:bg-slate-200"
-          >
-            <a href="/detail-task/{{ task.id }}">
-              <div>
-                <h3 class="text-red-500">
-                  <strike> {{ task.title }} </strike>
-                </h3>
-                <h3 class="text-slate-500">
-                  {{ task.created_date|date:"D d M" }}
-                </h3>
-              </div>
-            </a>
           </div>
           {% endfor %}
         </div>

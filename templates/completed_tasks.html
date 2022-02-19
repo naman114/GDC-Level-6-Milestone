@@ -22,8 +22,9 @@
           </h2>
         </div>
 
-        <!-- TODO: Fix completed_tasks and total_tasks count -->
-        <h3>{{ completed_tasks }} of {{ total_tasks }} tasks completed</h3>
+        <h3>
+          {{ completed_tasks_count }} of {{ total_tasks_count }} tasks completed
+        </h3>
         <div class="flex justify-evenly">
           <h2 class="text-lg hover:cursor-pointer px-5 py-1">
             <a href="/all_tasks">All</a>
@@ -51,6 +52,10 @@
             value="Search"
           />
         </form>
+
+        {% if not tasks.count %}
+        <p class="text-center">Task list is empty!</p>
+        {% endif %}
 
         <div class="flex flex-col">
           {% for task in tasks %}

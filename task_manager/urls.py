@@ -29,10 +29,12 @@ from tasks.views import (
     GenericAllTaskView,
 )
 from django.contrib.auth.views import LogoutView
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("all_tasks/", GenericAllTaskView.as_view()),
+    path("", RedirectView.as_view(url="/tasks")),
     path("tasks/", GenericTaskView.as_view()),
     path("completed_tasks/", GenericCompletedTaskView.as_view()),
     path("create-task/", GenericTaskCreateView.as_view()),
