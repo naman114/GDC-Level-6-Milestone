@@ -36,6 +36,52 @@ class TaskProgressManager:
         return context
 
 
+def handlePriorityCascading(existing_priority, target_priority, user):
+    # Fetching user's pending tasks having the same priority as the task to be created
+    tasks_matching_priority = Task.objects.filter(
+        priority=target_priority,
+        user=user,
+        deleted=False,
+        completed=False,
+    )
+    # Fetching all pending tasks of the user
+    pending_tasks = Task.objects.filter(user=user, completed=False, deleted=False)
+
+    if tasks_matching_priority.exists():
+
+        priority_pk_dict = {}
+        for task in pending_tasks:
+            priority_pk_dict[task.priority] = task.pk
+
+        # Case 1: When we want to decrease the priority of a task (move it up the list) or add a new task
+        # The idea is to increase the priority by 1 of all tasks having priority in the range [target_priority, existing_priority - 1]
+        shift_priority_by = None
+        if existing_priority >= target_priority:
+            priority_pk_dict = dict(sorted(priority_pk_dict.items(), reverse=True))
+            shift_priority_by = 1
+
+        # Case 2: When we want to increase the priority of a task (move it down the list)
+        # The idea is to decrease the priority by 1 of all tasks having priority in the range [existing_priority + 1, target_priority]
+        else:
+            priority_pk_dict = dict(sorted(priority_pk_dict.items()))
+            shift_priority_by = -1
+
+        flag = False
+        if existing_priority == target_priority:
+            flag = True
+
+        for key in priority_pk_dict:
+            if flag == False:
+                if key == existing_priority:
+                    flag = True
+            else:
+                taskToUpdate = Task.objects.get(pk=priority_pk_dict[key])
+                taskToUpdate.priority += shift_priority_by
+                taskToUpdate.save()
+                if key == target_priority:
+                    break
+
+
 ################################ Pending tasks ##########################################
 class GenericTaskView(LoginRequiredMixin, TaskProgressManager, ListView):
     queryset = Task.objects.filter(deleted=False, completed=False)
@@ -145,36 +191,12 @@ class GenericTaskCreateView(LoginRequiredMixin, CreateView):
     success_url = "/tasks"
 
     def form_valid(self, form):
+        priority = form.cleaned_data["priority"]
+
+        handlePriorityCascading(priority, priority, self.request.user)
+
         self.object = form.save()
         self.object.user = self.request.user
-
-        # Fetching user's pending tasks having the same priority as the task to be created
-        tasks_matching_priority = Task.objects.filter(
-            priority=self.object.priority,
-            user=self.request.user,
-            deleted=False,
-            completed=False,
-        )
-
-        if tasks_matching_priority.exists():
-            # Fetching all pending tasks of the user
-            pending_tasks = Task.objects.filter(
-                user=self.request.user, completed=False, deleted=False
-            )
-
-            # Creating a dictionary of priority vs primary key of each pending task
-            priority_pk_dict = {}
-            for task in pending_tasks:
-                priority_pk_dict[task.priority] = task.pk
-
-            # Traverse over the dictionary in reverse sorted order by priority
-            for key in sorted(priority_pk_dict.keys(), reverse=True):
-                taskToUpdate = Task.objects.get(pk=priority_pk_dict[key])
-                taskToUpdate.priority += 1
-                taskToUpdate.save()
-                if key == self.object.priority:
-                    break
-
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
 
@@ -187,59 +209,10 @@ class GenericTaskUpdateView(AuthorizedTaskManager, UpdateView):
     success_url = "/tasks"
 
     def form_valid(self, form):
-        # Fetching user's pending tasks having the same priority as the task to be updated
-        tasks_matching_priority = Task.objects.filter(
-            priority=self.object.priority,
-            user=self.request.user,
-            deleted=False,
-            completed=False,
-        )
+        existing_priority = Task.objects.get(pk=self.object.pk).priority
+        target_priority = form.cleaned_data["priority"]
 
-        if tasks_matching_priority.exists():
-            # Priority of the task before update
-            existing_priority = Task.objects.get(pk=self.object.pk).priority
-
-            # Priority of the task requested in the update
-            # There can be atmost 1 task having the same priority. This is why we take the first value in the queryset
-            target_priority = tasks_matching_priority.first().priority
-
-            pending_tasks = Task.objects.filter(
-                user=self.request.user, completed=False, deleted=False
-            )
-
-            priority_pk_dict = {}
-            for task in pending_tasks:
-                priority_pk_dict[task.priority] = task.pk
-
-            # Case 1: When we want to decrease the priority of a task (move it up the list)
-            # The idea is to increase the priority by 1 of all tasks having priority in the range [target_priority, existing_priority - 1]
-            if existing_priority > target_priority:
-                flag = False
-                for key in sorted(priority_pk_dict, reverse=True):
-                    if flag == False:
-                        if key == existing_priority:
-                            flag = True
-                    else:
-                        taskToUpdate = Task.objects.get(pk=priority_pk_dict[key])
-                        taskToUpdate.priority += 1
-                        taskToUpdate.save()
-                        if key == target_priority:
-                            break
-
-            # Case 2: When we want to increase the priority of a task (move it down the list)
-            # The idea is to decrease the priority by 1 of all tasks having priority in the range [existing_priority + 1, target_priority]
-            else:
-                flag = False
-                for key in sorted(priority_pk_dict):
-                    if flag == False:
-                        if key == existing_priority:
-                            flag = True
-                    else:
-                        taskToUpdate = Task.objects.get(pk=priority_pk_dict[key])
-                        taskToUpdate.priority -= 1
-                        taskToUpdate.save()
-                        if key == target_priority:
-                            break
+        handlePriorityCascading(existing_priority, target_priority, self.request.user)
 
         self.object = form.save()
         return HttpResponseRedirect(self.get_success_url())
