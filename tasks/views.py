@@ -45,25 +45,27 @@ def handlePriorityCascading(existing_priority, target_priority, user):
         completed=False,
     )
     # Fetching all pending tasks of the user
-    pending_tasks = Task.objects.filter(user=user, completed=False, deleted=False)
+    pending_tasks = Task.objects.filter(
+        user=user, completed=False, deleted=False
+    ).order_by("priority")
 
     if tasks_matching_priority.exists():
 
         priority_pk_dict = {}
         for task in pending_tasks:
             priority_pk_dict[task.priority] = task.pk
+        # priority_pk_dict is already sorted by key
 
         # Case 1: When we want to decrease the priority of a task (move it up the list) or add a new task
         # The idea is to increase the priority by 1 of all tasks having priority in the range [target_priority, existing_priority - 1]
         shift_priority_by = None
         if existing_priority >= target_priority:
-            priority_pk_dict = dict(sorted(priority_pk_dict.items(), reverse=True))
+            priority_pk_dict = dict(reversed(list(priority_pk_dict.items())))
             shift_priority_by = 1
 
         # Case 2: When we want to increase the priority of a task (move it down the list)
         # The idea is to decrease the priority by 1 of all tasks having priority in the range [existing_priority + 1, target_priority]
         else:
-            priority_pk_dict = dict(sorted(priority_pk_dict.items()))
             shift_priority_by = -1
 
         flag = False
