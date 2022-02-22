@@ -54,25 +54,25 @@ def handlePriorityCascading(existing_priority, target_priority, user):
         # Case 1: When we want to decrease the priority of a task (move it up the list)
         # The idea is to increase the priority by 1 of all tasks having priority in the range [target_priority, existing_priority - 1]
         shift_priority_by = None
-        start = None
-        stop = None
+        first_task_to_update = None
+        last_task_to_update = None
         if existing_priority > target_priority:
-            start = target_priority
-            stop = existing_priority - 1
+            first_task_to_update = target_priority
+            last_task_to_update = existing_priority - 1
             shift_priority_by = 1
 
         # Case 2: When we want to increase the priority of a task (move it down the list)
         # The idea is to decrease the priority by 1 of all tasks having priority in the range [existing_priority + 1, target_priority]
         elif existing_priority < target_priority:
-            start = existing_priority + 1
-            stop = target_priority
+            first_task_to_update = existing_priority + 1
+            last_task_to_update = target_priority
             shift_priority_by = -1
 
         # Case 3: Creating a task
         # The idea is to increase the priority by 1 of all tasks having priority in the range [target_priority, highest_priority]
         else:
-            start = target_priority
-            stop = pending_tasks.last().priority
+            first_task_to_update = target_priority
+            last_task_to_update = pending_tasks.last().priority
             shift_priority_by = 1
 
         priority_pk_dict = {}
@@ -81,9 +81,9 @@ def handlePriorityCascading(existing_priority, target_priority, user):
 
         tasksToUpdate = []
 
-        for i in range(start, stop + 1):
-            if i in priority_pk_dict.keys():
-                taskToUpdate = Task.objects.get(pk=priority_pk_dict[i])
+        for task_to_update in range(first_task_to_update, last_task_to_update + 1):
+            if task_to_update in priority_pk_dict.keys():
+                taskToUpdate = Task.objects.get(pk=priority_pk_dict[task_to_update])
                 taskToUpdate.priority += shift_priority_by
                 tasksToUpdate.append(taskToUpdate)
 
