@@ -38,29 +38,18 @@ class TaskProgressManager:
 
 
 def handlePriorityCascading(new_priority, user):
-    # Fetching user's pending tasks having the same priority as the task to be created
-    tasks_matching_priority = Task.objects.filter(
-        priority=new_priority,
-        user=user,
-        deleted=False,
-        completed=False,
-    )
+    # Fetching all pending tasks of the user
+    pending_tasks = Task.objects.filter(user=user, completed=False, deleted=False)
 
-    if tasks_matching_priority.exists():
-        # Fetching all pending tasks of the user
-        pending_tasks = Task.objects.filter(
-            user=user, completed=False, deleted=False
-        ).order_by("priority")
+    tasksToUpdate = []
 
-        tasksToUpdate = []
+    while pending_tasks.filter(priority=new_priority).exists():
+        taskToUpdate = pending_tasks.filter(priority=new_priority).first()
+        taskToUpdate.priority += 1
+        tasksToUpdate.append(taskToUpdate)
+        new_priority += 1
 
-        while pending_tasks.filter(priority=new_priority).exists():
-            taskToUpdate = pending_tasks.filter(priority=new_priority).first()
-            taskToUpdate.priority += 1
-            tasksToUpdate.append(taskToUpdate)
-            new_priority += 1
-
-        Task.objects.bulk_update(tasksToUpdate, ["priority"])
+    Task.objects.bulk_update(tasksToUpdate, ["priority"])
 
 
 ################################ Pending tasks ##########################################
