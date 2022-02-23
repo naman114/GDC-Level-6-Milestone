@@ -42,9 +42,9 @@ urlpatterns = [
     path("detail-task/<pk>", GenericTaskDetailView.as_view()),
     path("delete-task/<pk>/", GenericTaskDeleteView.as_view()),
     path("complete_task/<pk>/", GenericMarkTaskAsCompleteView.as_view()),
-    path("user/signup", UserCreateView.as_view()),
-    path("user/login", UserLoginView.as_view()),
-    path("user/login", UserLoginView.as_view()),
-    path("user/logout", LogoutView.as_view()),
+    path("user/signup/", UserCreateView.as_view()),
+    path("user/login/", UserLoginView.as_view()),
+    path("user/login/", UserLoginView.as_view()),
+    path("user/logout/", LogoutView.as_view()),
     path("sessiontest", session_storage_view),
 ]
