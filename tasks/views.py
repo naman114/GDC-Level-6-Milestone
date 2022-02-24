@@ -13,6 +13,7 @@ from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 
+
 class AuthorizedTaskManager(LoginRequiredMixin):
     def get_queryset(self):
         tasks = Task.objects.filter(
@@ -36,10 +37,14 @@ class TaskProgressManager:
         return context
 
 
-def handlePriorityCascading(new_priority, user):
+def handlePriorityCascading(id, new_priority, user):
     with transaction.atomic():
         # Fetching all pending tasks of the user
-        pending_tasks = Task.objects.filter(user=user, completed=False, deleted=False).select_for_update()
+        pending_tasks = Task.objects.filter(
+            user=user, completed=False, deleted=False
+        ).select_for_update()
+
+        pending_tasks = pending_tasks.exclude(id=id)
 
         tasksToUpdate = []
 
@@ -167,10 +172,11 @@ class GenericTaskCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         new_priority = form.cleaned_data["priority"]
 
-        handlePriorityCascading(new_priority, self.request.user)
-
-        self.object = form.save()
+        self.object = form.save(commit=False)
         self.object.user = self.request.user
+
+        handlePriorityCascading(self.object.id, new_priority, self.request.user)
+
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
 
@@ -187,7 +193,7 @@ class GenericTaskUpdateView(AuthorizedTaskManager, UpdateView):
         new_priority = form.cleaned_data["priority"]
 
         if existing_priority != new_priority:
-            handlePriorityCascading(new_priority, self.request.user)
+            handlePriorityCascading(self.object.id, new_priority, self.request.user)
 
         self.object = form.save()
         return HttpResponseRedirect(self.get_success_url())
